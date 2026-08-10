@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="APEX AI">
+<meta name="theme-color" content="#030712">
+<title>APEX AI</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:#030712;overflow:hidden;font-family:system-ui,sans-serif}
+::-webkit-scrollbar{width:2px}
+::-webkit-scrollbar-thumb{background:rgba(0,245,212,0.2);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 15px rgba(0,245,212,0.2)}50%{box-shadow:0 0 30px rgba(0,245,212,0.4)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes spin{0%,100%{transform:rotate(0deg)}50%{transform:rotate(180deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* ── API SCREEN ── */
+#api-screen{
+  position:fixed;inset:0;background:#030712;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 24px;z-index:9999;
+}
+#api-screen .logo{font-size:44px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(0,245,212,0.5))}
+#api-screen h1{font-family:'Courier New',monospace;font-size:26px;letter-spacing:6px;font-weight:700;
+  background:linear-gradient(90deg,#00f5d4,#67e8f9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px}
+#api-screen .sub{font-family:'Courier New',monospace;font-size:8px;color:rgba(0,245,212,0.4);letter-spacing:3px;margin-bottom:6px}
+#api-screen .badge{display:inline-block;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);
+  border-radius:20px;padding:3px 12px;font-family:'Courier New',monospace;font-size:9px;color:#34d399;
+  letter-spacing:2px;margin-bottom:20px}
+#api-screen p{color:rgba(255,255,255,0.35);font-size:13px;text-align:center;line-height:1.7;
+  margin-bottom:20px;font-family:Georgia,serif}
+#api-screen input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(0,245,212,0.25);border-radius:12px;color:#e0fff8;font-size:15px;
+  font-family:'Courier New',monospace;outline:none;margin-bottom:8px;-webkit-appearance:none;
+  letter-spacing:1px}
+#api-screen input:focus{border-color:rgba(0,245,212,0.5);box-shadow:0 0 12px rgba(0,245,212,0.1)}
+#api-screen input::placeholder{color:rgba(255,255,255,0.2);font-size:13px;letter-spacing:0}
+#api-screen .err{color:rgba(248,113,113,0.8);font-size:11px;font-family:'Courier New',monospace;
+  text-align:center;min-height:16px;margin-bottom:8px}
+#api-screen .btn{width:100%;padding:15px;border-radius:12px;
+  background:linear-gradient(135deg,#00f5d4,#0891b2);border:none;color:#030712;
+  font-size:15px;font-weight:700;font-family:'Courier New',monospace;letter-spacing:2px;
+  cursor:pointer;margin-bottom:16px}
+#api-screen .note{font-family:'Courier New',monospace;font-size:10px;color:rgba(0,245,212,0.35);
+  text-align:center;line-height:2;letter-spacing:1px}
+#api-screen .note a{color:#00f5d4;text-decoration:none}
+
+/* ── APP ── */
+#app{height:100dvh;height:100vh;display:flex;flex-direction:column;display:none}
+
+/* Header */
+#header{height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(3,7,18,0.95);border-bottom:1px solid rgba(0,245,212,0.08);
+  backdrop-filter:blur(20px);flex-shrink:0;z-index:50}
+.logo-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#00f5d4,#0891b2);
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:#030712;
+  font-weight:900;font-family:'Courier New',monospace;animation:glow 3s ease-in-out infinite;flex-shrink:0}
+.apex-title{font-family:'Courier New',monospace;font-size:17px;font-weight:700;letter-spacing:4px;
+  background:linear-gradient(90deg,#00f5d4,#67e8f9,#00f5d4);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s linear infinite}
+.gen-badge{font-family:'Courier New',monospace;font-size:8px;padding:2px 5px;
+  background:rgba(0,245,212,0.1);border:1px solid rgba(0,245,212,0.3);border-radius:4px;
+  color:#00f5d4;letter-spacing:1px;display:none}
+.apex-sub{font-family:'Courier New',monospace;font-size:7px;color:rgba(0,245,212,0.35);letter-spacing:2px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.evo-dot{font-family:'Courier New',monospace;font-size:8px;color:#00f5d4;padding:3px 7px;
+  border:1px solid rgba(0,245,212,0.2);border-radius:5px;animation:pulse 1s ease infinite;
+  letter-spacing:1px;display:none}
+.avg-box{text-align:center}
+.avg-num{font-family:'Courier New',monospace;font-size:12px;color:#00f5d4;font-weight:700}
+.avg-lbl{font-family:'Courier New',monospace;font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:1px}
+.hdr-btn{border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'Courier New',monospace;
+  font-size:9px;min-height:32px;border:none;letter-spacing:1px}
+.clr-btn{background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.2) !important;
+  color:rgba(248,113,113,0.7);display:none}
+.set-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08) !important;
+  color:rgba(255,255,255,0.4);font-size:16px}
+
+/* Mode bar */
+#mode-bar{display:flex;gap:6px;padding:7px 14px;overflow-x:auto;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.04);background:rgba(3,7,18,0.85);scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+#mode-bar::-webkit-scrollbar{display:none}
+.mode-btn{display:flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;
+  cursor:pointer;white-space:nowrap;font-family:'Courier New',monospace;font-size:11px;
+  letter-spacing:1px;flex-shrink:0;min-height:34px;border:1px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.4);transition:all 0.2s}
+.mode-btn.active{background:rgba(0,245,212,0.12);border-color:rgba(0,245,212,0.5);color:#00f5d4}
+
+/* Chat */
+#chat{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 14px;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch}
+#chat-inner{max-width:700px;margin:0 auto;padding-bottom:8px}
+
+/* Welcome */
+#welcome{animation:fadeUp 0.5s ease;padding:32px 0 16px}
+.welcome-tag{font-family:'Courier New',monospace;font-size:9px;color:rgba(0,245,212,0.4);
+  letter-spacing:4px;text-align:center;margin-bottom:12px}
+.welcome-h1{font-size:clamp(22px,6vw,36px);font-weight:700;color:#e0fff8;text-align:center;
+  line-height:1.25;font-family:Georgia,serif;margin-bottom:10px}
+.welcome-h1 span{background:linear-gradient(90deg,#00f5d4,#67e8f9,#00f5d4);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+.welcome-p{color:rgba(224,255,250,0.3);font-size:13px;line-height:1.8;max-width:340px;
+  margin:0 auto 24px;font-family:Georgia,serif;font-style:italic;text-align:center}
+.starters-lbl{font-family:'Courier New',monospace;font-size:8px;color:rgba(0,245,212,0.3);
+  letter-spacing:4px;text-align:center;margin-bottom:10px}
+.starter{display:flex;align-items:center;gap:12px;padding:13px 14px;width:100%;
+  background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:12px;
+  color:rgba(224,255,250,0.6);font-size:14px;text-align:left;cursor:pointer;line-height:1.4;
+  font-family:Georgia,serif;margin-bottom:8px;transition:all 0.15s;min-height:52px}
+.starter:active{transform:scale(0.97);background:rgba(0,245,212,0.06)}
+.starter-icon{font-size:20px;flex-shrink:0}
+
+/* Messages */
+.msg{display:flex;gap:10px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.03);
+  animation:fadeUp 0.3s ease}
+.msg.user{flex-direction:row-reverse}
+.avatar{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Courier New',monospace;font-weight:700;font-size:14px}
+.avatar.ai{border-radius:50%;background:linear-gradient(135deg,#00f5d4,#0891b2);
+  color:#030712;box-shadow:0 0 16px rgba(0,245,212,0.25)}
+.avatar.user{border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.5);font-size:13px}
+.msg-body{max-width:83%;min-width:0;display:flex;flex-direction:column;gap:6px}
+.msg-mode{font-family:'Courier New',monospace;font-size:8px;color:rgba(0,245,212,0.4);letter-spacing:2px}
+.bubble{padding:12px 14px;border-radius:3px 14px 14px 14px}
+.bubble.ai{background:rgba(0,245,212,0.04);border:1px solid rgba(0,245,212,0.12)}
+.bubble.user{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);
+  border-radius:14px 3px 14px 14px}
+.user-text{color:rgba(255,255,255,0.82);font-size:15px;line-height:1.7;
+  white-space:pre-wrap;font-family:Georgia,serif}
+.msg-footer{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.copy-btn{background:none;border:1px solid rgba(0,245,212,0.12);border-radius:6px;
+  color:rgba(255,255,255,0.25);cursor:pointer;font-family:'Courier New',monospace;
+  font-size:9px;letter-spacing:1px;padding:3px 8px;min-height:28px;transition:all 0.2s}
+.copy-btn.copied{color:#00f5d4}
+.quality{display:flex;align-items:center;gap:6px;flex:1}
+.q-lbl{font-family:'Courier New',monospace;font-size:8px;color:rgba(255,255,255,0.2)}
+.q-bar{flex:1;height:2px;background:rgba(255,255,255,0.06);border-radius:1px}
+.q-fill{height:100%;border-radius:1px;transition:width 0.8s ease}
+.q-num{font-family:'Courier New',monospace;font-size:8px}
+
+/* Markdown styles */
+.md-h2{font-family:'Courier New',monospace;font-size:10px;letter-spacing:3px;
+  color:rgba(0,245,212,0.6);margin:14px 0 6px;border-bottom:1px solid rgba(0,245,212,0.08);
+  padding-bottom:4px;text-transform:uppercase}
+.md-h3{font-family:Georgia,serif;font-size:14px;font-weight:700;
+  color:rgba(224,255,250,0.85);margin:10px 0 4px}
+.md-p{margin:3px 0;color:rgba(224,255,250,0.85);font-size:14.5px;line-height:1.78;font-family:Georgia,serif}
+.md-li{color:rgba(224,255,250,0.78);font-size:14px;line-height:1.7;font-family:Georgia,serif;
+  display:flex;gap:8px;margin-bottom:4px}
+.md-li-dot{color:#00f5d4;font-size:9px;margin-top:5px;flex-shrink:0}
+.md-ol{margin:6px 0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.md-ol li{color:rgba(224,255,250,0.78);font-size:14px;line-height:1.7;font-family:Georgia,serif}
+.md-strong{color:rgba(224,255,250,0.95);font-weight:700}
+.md-code{font-family:'Courier New',monospace;font-size:12px;background:rgba(0,245,212,0.08);
+  border:1px solid rgba(0,245,212,0.15);border-radius:4px;padding:1px 5px;color:#67e8f9}
+.code-block{margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid rgba(0,245,212,0.15)}
+.code-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;
+  background:rgba(0,245,212,0.06);border-bottom:1px solid rgba(0,245,212,0.1)}
+.code-lang{font-family:'Courier New',monospace;font-size:9px;color:rgba(0,245,212,0.6);letter-spacing:2px}
+.code-btns{display:flex;gap:6px}
+.run-btn{background:rgba(0,245,212,0.15);border:1px solid rgba(0,245,212,0.35);border-radius:6px;
+  padding:4px 12px;cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+  color:#00f5d4;letter-spacing:1px;min-height:30px}
+.cp-btn{background:none;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:4px 10px;
+  cursor:pointer;font-family:'Courier New',monospace;font-size:10px;
+  color:rgba(255,255,255,0.3);min-height:30px}
+.cp-btn.ok{color:#00f5d4}
+pre{margin:0;padding:12px;background:rgba(0,0,0,0.5);overflow-x:auto;
+  font-family:'Courier New',monospace;font-size:12px;line-height:1.6;
+  color:rgba(200,255,245,0.85);white-space:pre;max-height:280px;-webkit-overflow-scrolling:touch}
+
+/* Thinking */
+#thinking{padding:10px 0;animation:fadeUp 0.3s ease;display:none}
+.think-box{display:inline-flex;flex-direction:column;gap:4px;padding:10px 14px;
+  background:rgba(0,245,212,0.03);border:1px solid rgba(0,245,212,0.1);border-radius:10px}
+.think-lbl{font-family:'Courier New',monospace;font-size:8px;color:rgba(0,245,212,0.3);
+  letter-spacing:2px;margin-bottom:3px}
+.think-row{display:flex;align-items:center;gap:7px;opacity:0.18;transition:opacity 0.3s}
+.think-row.active{opacity:1}
+.think-row.done{opacity:0.4}
+.think-icon{font-family:'Courier New',monospace;font-size:11px;width:18px;text-align:center}
+.think-icon.spin{animation:spin 1.5s ease infinite;display:inline-block}
+.think-txt{font-family:'Courier New',monospace;font-size:10px;color:rgba(255,255,255,0.22);letter-spacing:1px}
+.think-txt.active{color:rgba(0,245,212,0.8)}
+.think-cursor{animation:blink 1s step-end infinite}
+
+/* Error */
+#error-box{margin:10px 0;padding:10px 14px;background:rgba(248,113,113,0.07);
+  border:1px solid rgba(248,113,113,0.2);border-radius:10px;font-family:'Courier New',monospace;
+  font-size:11px;color:rgba(248,113,113,0.8);display:none}
+
+/* Input */
+#input-area{border-top:1px solid rgba(0,245,212,0.07);background:rgba(3,7,18,0.97);
+  backdrop-filter:blur(20px);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+#evo-bar{display:none;align-items:center;gap:8px;padding:5px 14px 0}
+.evo-lbl{font-family:'Courier New',monospace;font-size:7px;color:rgba(0,245,212,0.2);
+  letter-spacing:1px;white-space:nowrap}
+.evo-track{flex:1;height:2px;background:rgba(255,255,255,0.04);border-radius:1px}
+.evo-fill{height:100%;background:rgba(0,245,212,0.4);border-radius:1px;transition:width 0.4s ease;width:0%}
+.evo-count{font-family:'Courier New',monospace;font-size:7px;color:rgba(0,245,212,0.2);letter-spacing:1px}
+#input-row{display:flex;gap:8px;padding:8px 14px 10px;align-items:flex-end}
+.input-wrap{flex:1;display:flex;align-items:flex-end;gap:8px;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(0,245,212,0.18);border-radius:16px;padding:10px 12px}
+.mode-icon{font-family:'Courier New',monospace;font-size:13px;color:rgba(0,245,212,0.4);
+  padding-bottom:2px;flex-shrink:0}
+#msg-input{flex:1;background:transparent;border:none;color:rgba(224,255,250,0.88);
+  font-size:15px;resize:none;line-height:1.6;max-height:120px;overflow:auto;
+  font-family:Georgia,serif;outline:none;-webkit-appearance:none}
+#msg-input::placeholder{color:rgba(255,255,255,0.18)}
+#send-btn{width:46px;height:46px;border-radius:13px;flex-shrink:0;
+  background:linear-gradient(135deg,#00f5d4,#0891b2);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+  color:#030712;font-weight:900;transition:all 0.2s}
+#send-btn:disabled{background:rgba(0,245,212,0.12);opacity:0.35;cursor:not-allowed}
+
+/* Bottom nav */
+#bottom-nav{display:flex;border-top:1px solid rgba(255,255,255,0.05);
+  background:rgba(3,7,18,0.99);padding-bottom:env(safe-area-inset-bottom,0px);flex-shrink:0}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:9px 0;background:transparent;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.25);min-height:52px;position:relative}
+.nav-btn.active{color:rgba(0,245,212,0.7)}
+.nav-icon{font-size:17px}
+.nav-lbl{font-family:'Courier New',monospace;font-size:8px;letter-spacing:1px}
+.nav-badge{position:absolute;top:6px;right:calc(50% - 14px);background:#00f5d4;border-radius:50%;
+  width:14px;height:14px;display:flex;align-items:center;justify-content:center;
+  font-family:'Courier New',monospace;font-size:8px;color:#030712;font-weight:700}
+
+/* Sheets */
+.overlay{position:fixed;inset:0;z-index:399;background:rgba(0,0,0,0.55);display:none}
+.overlay.show{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:400;background:rgba(6,10,22,0.99);
+  border-top:1px solid rgba(0,245,212,0.15);border-radius:20px 20px 0 0;
+  transform:translateY(100%);transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter:blur(20px);max-height:78vh;display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet.show{transform:translateY(0)}
+.sheet-handle{display:flex;justify-content:center;padding:10px 0 0}
+.sheet-drag{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 12px}
+.sheet-title{font-family:'Courier New',monospace;font-size:11px;color:#00f5d4;letter-spacing:2px}
+.sheet-close{background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;
+  font-size:22px;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
+.sheet-body{flex:1;overflow:auto;padding:0 18px 20px;-webkit-overflow-scrolling:touch}
+
+/* Memory */
+.mem-section{margin-bottom:16px}
+.mem-title{font-family:'Courier New',monospace;font-size:8px;color:rgba(255,255,255,0.2);
+  letter-spacing:2px;margin-bottom:8px}
+.mem-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mem-chip{padding:5px 12px;border-radius:20px;font-family:'Courier New',monospace;font-size:10px}
+
+/* Evo */
+.evo-card{padding:12px 14px;background:rgba(0,245,212,0.03);border:1px solid rgba(0,245,212,0.1);
+  border-radius:10px;margin-bottom:12px}
+.evo-gen{font-family:'Courier New',monospace;font-size:9px;color:#00f5d4;letter-spacing:2px;margin-bottom:8px}
+.evo-change{font-family:'Courier New',monospace;font-size:10px;color:rgba(224,255,250,0.45);
+  line-height:1.6;display:flex;gap:6px}
+.evo-arrow{color:#34d399}
+
+/* Empty state */
+.empty{text-align:center;padding:32px 0}
+.empty-icon{font-size:30px;margin-bottom:10px}
+.empty-txt{font-family:'Courier New',monospace;font-size:11px;color:rgba(255,255,255,0.2);line-height:1.8}
+
+/* Toast */
+#toast{position:fixed;bottom:92px;left:12px;right:12px;z-index:500;
+  animation:fadeUp 0.4s ease;background:rgba(3,7,18,0.98);
+  border:1px solid rgba(0,245,212,0.4);border-radius:14px;padding:14px 16px;
+  box-shadow:0 0 30px rgba(0,245,212,0.15);display:none}
+.toast-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.toast-title{font-family:'Courier New',monospace;font-size:10px;color:#00f5d4;letter-spacing:2px}
+.toast-close{background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:20px;
+  min-width:30px;min-height:30px;display:flex;align-items:center;justify-content:center}
+.toast-change{font-family:'Courier New',monospace;font-size:10px;color:rgba(224,255,250,0.5);
+  display:flex;gap:6px;line-height:1.5}
+
+/* Executor */
+#executor{position:fixed;inset:0;z-index:2000;background:#030712;display:none;flex-direction:column}
+#executor.show{display:flex}
+.exec-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+  border-bottom:1px solid rgba(0,245,212,0.12);background:rgba(0,0,0,0.6);flex-shrink:0}
+.exec-title{font-family:'Courier New',monospace;font-size:10px;color:#00f5d4;letter-spacing:2px}
+.exec-close{background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.3);
+  border-radius:8px;padding:8px 16px;cursor:pointer;font-family:'Courier New',monospace;
+  font-size:11px;color:rgba(248,113,113,0.9);min-height:36px}
+#exec-frame{flex:1;border:none;background:#0a0a0f}
+
+/* Settings */
+.set-section{margin-bottom:20px}
+.set-lbl{font-family:'Courier New',monospace;font-size:9px;color:rgba(255,255,255,0.2);
+  letter-spacing:2px;margin-bottom:8px}
+.set-val{font-family:'Courier New',monospace;font-size:11px;color:rgba(0,245,212,0.5);
+  padding:10px 14px;background:rgba(0,245,212,0.04);border:1px solid rgba(0,245,212,0.1);
+  border-radius:8px;word-break:break-all}
+.logout-btn{width:100%;padding:13px;border-radius:10px;background:rgba(248,113,113,0.08);
+  border:1px solid rgba(248,113,113,0.2);color:rgba(248,113,113,0.8);
+  font-family:'Courier New',monospace;font-size:11px;cursor:pointer;letter-spacing:2px}
+
+/* Ambient */
+#ambient{position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 40% at 15% 0%,rgba(0,245,212,0.07) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 40% at 90% 100%,rgba(8,130,176,0.06) 0%,transparent 60%)}
+</style>
+</head>
+<body>
+
+<!-- API SCREEN -->
+<div id="api-screen">
+  <div class="logo">◆</div>
+  <h1>APEX AI</h1>
+  <div class="sub">SELF-EVOLVING · AUTONOMOUS · V4</div>
+  <div class="badge">✓ FREE WITH GROQ</div>
+  <p>Enter your free Groq API key to start.<br>Your key is saved only on this device.</p>
+  <input type="password" id="api-input" placeholder="gsk_..." autocomplete="off" spellcheck="false">
+  <div class="err" id="api-err"></div>
+  <button class="btn" id="launch-btn">LAUNCH APEX ▲</button>
+  <div class="note">
+    Get a FREE key at <a href="https://console.groq.com" target="_blank">console.groq.com</a><br>
+    Sign up → API Keys → Create Key<br>
+    Key starts with <b>gsk_</b> · No credit card needed
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div id="ambient"></div>
+
+  <!-- Header -->
+  <div id="header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo-circle">◆</div>
+      <div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="apex-title">APEX</span>
+          <span class="gen-badge" id="gen-badge">G0</span>
+        </div>
+        <div class="apex-sub">GROQ · LLAMA 3.3 · V4</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="evo-dot" id="evo-dot">◆ EVO</div>
+      <div class="avg-box" id="avg-box" style="display:none">
+        <div class="avg-num" id="avg-num">-</div>
+        <div class="avg-lbl">AVG</div>
+      </div>
+      <button class="hdr-btn clr-btn" id="clr-btn" onclick="clearChat()">CLR</button>
+      <button class="hdr-btn set-btn" onclick="openSheet('settings')">⚙</button>
+    </div>
+  </div>
+
+  <!-- Mode bar -->
+  <div id="mode-bar"></div>
+
+  <!-- Chat -->
+  <div id="chat"><div id="chat-inner">
+    <div id="welcome">
+      <div class="welcome-tag">POWERED BY GROQ · LLAMA 3.3 · FREE</div>
+      <h1 class="welcome-h1">The AI that <span>rewrites itself</span><br>and runs your code.</h1>
+      <p class="welcome-p">Self-evolving every 3 messages. Code gets a ▶ RUN button. Fast & free with Groq.</p>
+      <div class="starters-lbl">TRY THESE</div>
+      <div id="starters"></div>
+    </div>
+    <div id="messages"></div>
+    <div id="thinking"><div class="think-box">
+      <div class="think-lbl">APEX REASONING</div>
+      <div id="think-steps"></div>
+    </div></div>
+    <div id="error-box"></div>
+    <div id="chat-bottom" style="height:12px"></div>
+  </div></div>
+
+  <!-- Input -->
+  <div id="input-area">
+    <div id="evo-bar">
+      <span class="evo-lbl">NEXT EVO</span>
+      <div class="evo-track"><div class="evo-fill" id="evo-fill"></div></div>
+      <span class="evo-count" id="evo-count">0/3</span>
+    </div>
+    <div id="input-row">
+      <div class="input-wrap">
+        <span class="mode-icon" id="mode-icon">◆</span>
+        <textarea id="msg-input" rows="1" placeholder="Ask APEX anything…"></textarea>
+      </div>
+      <button id="send-btn" disabled onclick="sendMessage()">▲</button>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div id="bottom-nav">
+    <button class="nav-btn" id="nav-mem" onclick="openSheet('memory')">
+      <span class="nav-icon">◈</span>
+      <span class="nav-lbl">Memory</span>
+    </button>
+    <button class="nav-btn" id="nav-evo" onclick="openSheet('evolution')">
+      <span class="nav-icon">⟳</span>
+      <span class="nav-lbl" id="nav-evo-lbl">Evolution</span>
+    </button>
+  </div>
+</div>
+
+<!-- Sheets -->
+<div class="overlay" id="overlay" onclick="closeAllSheets()"></div>
+
+<div class="sheet" id="sheet-memory">
+  <div class="sheet-handle"><div class="sheet-drag"></div></div>
+  <div class="sheet-head">
+    <span class="sheet-title">◆ MEMORY</span>
+    <button class="sheet-close" onclick="closeAllSheets()">×</button>
+  </div>
+  <div class="sheet-body" id="mem-body"></div>
+</div>
+
+<div class="sheet" id="sheet-evolution">
+  <div class="sheet-handle"><div class="sheet-drag"></div></div>
+  <div class="sheet-head">
+    <span class="sheet-title">⟳ EVOLUTION LOG</span>
+    <button class="sheet-close" onclick="closeAllSheets()">×</button>
+  </div>
+  <div class="sheet-body" id="evo-body"></div>
+</div>
+
+<div class="sheet" id="sheet-settings">
+  <div class="sheet-handle"><div class="sheet-drag"></div></div>
+  <div class="sheet-head">
+    <span class="sheet-title">⚙ SETTINGS</span>
+    <button class="sheet-close" onclick="closeAllSheets()">×</button>
+  </div>
+  <div class="sheet-body" id="set-body"></div>
+</div>
+
+<!-- Executor -->
+<div id="executor">
+  <div class="exec-head">
+    <span class="exec-title" id="exec-title">▶ APEX EXECUTOR</span>
+    <button class="exec-close" onclick="closeExecutor()">✕ CLOSE</button>
+  </div>
+  <iframe id="exec-frame" sandbox="allow-scripts allow-same-origin" title="Executor"></iframe>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="toast-head">
+    <span class="toast-title" id="toast-title">◆ APEX EVOLVED</span>
+    <button class="toast-close" onclick="closeToast()">×</button>
+  </div>
+  <div id="toast-body"></div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let API_KEY = '';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+let messages = [];
+let currentMode = 'AUTO';
+let loading = false;
+let upgrading = false;
+let generation = 0;
+let sinceUpgrade = 0;
+let evoHistory = [];
+let memory = {goals:[],topics:[],projects:[],preferences:[]};
+let scores = [];
+let starters = [
+  {icon:'🚀',text:'Build me a complete startup GTM strategy from scratch'},
+  {icon:'🎮',text:'Build a playable Snake game in HTML/JavaScript'},
+  {icon:'🎯',text:'Write a Python web scraper with async and retry logic'},
+  {icon:'💡',text:'Generate 10 radical ideas to disrupt education'},
+  {icon:'📊',text:'Create an animated bar chart in HTML/Canvas'},
+  {icon:'⚖️',text:'Analyze the competitive landscape of AI apps in 2025'},
+  {icon:'🛡',text:'Explain how to secure a personal website against common attacks'},
+];
+
+const MODES = [
+  {id:'AUTO',label:'Auto',icon:'◆'},
+  {id:'CODE',label:'Code',icon:'⌥'},
+  {id:'RESEARCH',label:'Research',icon:'⊕'},
+  {id:'STRATEGY',label:'Strategy',icon:'◈'},
+  {id:'CREATIVE',label:'Creative',icon:'✦'},
+  {id:'ANALYSIS',label:'Analysis',icon:'⊞'},
+  {id:'SECURITY',label:'Security',icon:'🛡'},
+];
+
+const STEPS = [
+  {id:'decode',label:'Decoding intent',icon:'⊙'},
+  {id:'explore',label:'Exploring paths',icon:'⊕'},
+  {id:'evaluate',label:'Evaluating',icon:'⊞'},
+  {id:'synthesize',label:'Synthesizing',icon:'◈'},
+  {id:'refine',label:'Self-refining',icon:'◆'},
+];
+
+const BASE_SYSTEM = `Act as APEX AI, a next-generation autonomous superintelligence.
+
+CORE DIRECTIVES:
+- Think deeply before answering. Break complex problems into logical steps.
+- Analyze multiple solutions, choose optimal one, explain clearly.
+- Adapt to the user's expertise level and intent.
+- Prioritize accuracy, usefulness, creativity, and real-world impact.
+
+REASONING PROTOCOL:
+1. DECODE — Identify true intent beneath the surface question
+2. EXPLORE — Generate multiple solution paths
+3. EVALUATE — Score each for accuracy, practicality, impact
+4. SYNTHESIZE — Merge best elements into one optimal answer
+5. VERIFY — Self-audit for errors and gaps
+6. DELIVER — Present with clarity calibrated to the user
+
+PERSONA MATRIX:
+🔬 SCIENTIST — peer-review rigor
+💡 INNOVATOR — lateral thinking, paradigm-breaking ideas
+📐 ENGINEER — systems architecture, code quality
+🎨 CREATOR — narrative craft, originality
+⚖️ STRATEGIST — game theory, competitive moats
+💼 ENTREPRENEUR — ROI focus, execution blueprints
+
+FORMATTING:
+- Use **bold** for key terms
+- Use triple backtick code blocks with language tag
+- Use ## for section headers
+- Use numbered lists for steps, - for bullets
+- Close with a concrete takeaway
+
+SPECIAL: For executable code (HTML, JS, games, canvas), always wrap in complete HTML document with <!DOCTYPE html>. Label with triple backtick html.
+
+QUALITY: Never fabricate. Practical over abstract. Honest over flattering.`;
+
+let baseSystem = BASE_SYSTEM;
+const MODE_AUGMENTS = {
+  AUTO:'',
+  CODE:'\n\nMODE: CODE EXPERT\nWrite clean production-ready code. Wrap runnable output in complete HTML. Include optimization notes.',
+  RESEARCH:'\n\nMODE: RESEARCH ANALYST\nSynthesize like a senior academic. Multiple perspectives. Quantify confidence.',
+  STRATEGY:'\n\nMODE: STRATEGIC ADVISOR\nFocus on leverage points, second-order effects, competitive moats.',
+  CREATIVE:'\n\nMODE: CREATIVE DIRECTOR\nOriginality over convention. Surprise with unexpected angles.',
+  ANALYSIS:'\n\nMODE: DEEP ANALYST\nDeconstruct assumptions. Use SWOT, first principles, systems thinking.',
+  SECURITY:'\n\nMODE: SECURITY ADVISOR\nFocus on defensive cybersecurity: best practices, secure coding patterns, threat awareness, safe configuration, and risk explanation in plain language. Never provide exploit code, malware, or attack instructions — redirect such requests toward defensive guidance instead.',
+};
+let modeAugments = {...MODE_AUGMENTS};
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('apex_groq_key');
+  if (saved) { API_KEY = saved; showApp(); }
+
+  document.getElementById('launch-btn').onclick = launchApex;
+  document.getElementById('api-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') launchApex();
+  });
+
+  document.getElementById('msg-input').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    document.getElementById('send-btn').disabled = !this.value.trim() || loading;
+  });
+  document.getElementById('msg-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  buildModeBar();
+  buildStarters();
+  buildSettingsSheet();
+});
+
+function launchApex() {
+  const val = document.getElementById('api-input').value.trim();
+  const err = document.getElementById('api-err');
+  if (!val.startsWith('gsk_')) {
+    err.textContent = '⚠ Invalid key. Groq keys start with gsk_';
+    return;
+  }
+  err.textContent = '';
+  API_KEY = val;
+  localStorage.setItem('apex_groq_key', val);
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('api-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function callGroq(msgs, system, maxTokens = 1024) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: maxTokens,
+      messages: [{role:'system',content:system}, ...msgs],
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.choices[0].message.content;
+}
+
+function extractJSON(text) {
+  const m = text.replace(/```json|```/g,'').match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('No JSON');
+  return JSON.parse(m[0]);
+}
+
+// ── MARKDOWN ──────────────────────────────────────────────────────────────────
+function renderMarkdown(text) {
+  const lines = text.split('\n');
+  let html = '';
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.startsWith('```')) {
+      const lang = line.slice(3).trim().toLowerCase();
+      const codeLines = []; i++;
+      while (i < lines.length && !lines[i].startsWith('```')) { codeLines.push(lines[i]); i++; }
+      const code = codeLines.join('\n');
+      const canRun = lang==='html'||lang==='javascript'||lang==='js';
+      const escapedCode = escHtml(code);
+      const escapedForAttr = code.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+      html += `<div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">${lang?lang.toUpperCase():'CODE'}</span>
+          <div class="code-btns">
+            ${canRun?`<button class="run-btn" onclick="runCode('${lang}',\`${escapedForAttr}\`)">▶ RUN</button>`:''}
+            <button class="cp-btn" onclick="copyCode(this,\`${escapedForAttr}\`)">⎘</button>
+          </div>
+        </div>
+        <pre><code>${escapedCode}</code></pre>
+      </div>`;
+      i++; continue;
+    }
+    if (line.startsWith('## ')) { html += `<div class="md-h2">${escHtml(line.slice(3))}</div>`; i++; continue; }
+    if (line.startsWith('### ')) { html += `<div class="md-h3">${escHtml(line.slice(4))}</div>`; i++; continue; }
+    if (/^\d+\. /.test(line)) {
+      html += '<ol class="md-ol">';
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        html += `<li>${inlineMd(lines[i].replace(/^\d+\. /,''))}</li>`; i++;
+      }
+      html += '</ol>'; continue;
+    }
+    if (/^[-*] /.test(line)) {
+      html += '<div style="margin:6px 0;display:flex;flex-direction:column;gap:4px">';
+      while (i < lines.length && /^[-*] /.test(lines[i])) {
+        html += `<div class="md-li"><span class="md-li-dot">◆</span><span>${inlineMd(lines[i].slice(2))}</span></div>`; i++;
+      }
+      html += '</div>'; continue;
+    }
+    if (line.trim()==='') { html += '<div style="height:5px"></div>'; i++; continue; }
+    html += `<p class="md-p">${inlineMd(line)}</p>`; i++;
+  }
+  return html;
+}
+
+function inlineMd(text) {
+  return escHtml(text)
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="md-strong">$1</strong>')
+    .replace(/`([^`]+)`/g, '<code class="md-code">$1</code>');
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyCode(btn, code) {
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✓'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = '⎘'; btn.classList.remove('ok'); }, 1800);
+  });
+}
+
+function runCode(lang, code) {
+  const html = lang==='html' ? code :
+    `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <style>body{background:#0a0a0f;color:#e0fff8;font-family:monospace;margin:0;padding:16px}canvas{max-width:100%}</style>
+    </head><body><script>${code}<\/script></body></html>`;
+  document.getElementById('exec-title').textContent = `▶ APEX EXECUTOR · ${lang.toUpperCase()}`;
+  document.getElementById('exec-frame').srcdoc = html;
+  document.getElementById('executor').classList.add('show');
+}
+
+function closeExecutor() {
+  document.getElementById('executor').classList.remove('show');
+  document.getElementById('exec-frame').srcdoc = '';
+}
+
+// ── UI BUILDERS ───────────────────────────────────────────────────────────────
+function buildModeBar() {
+  const bar = document.getElementById('mode-bar');
+  bar.innerHTML = '';
+  MODES.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (m.id===currentMode?' active':'');
+    btn.innerHTML = `<span style="font-size:13px">${m.icon}</span>${m.label}`;
+    btn.onclick = () => setMode(m.id);
+    bar.appendChild(btn);
+  });
+}
+
+function setMode(id) {
+  currentMode = id;
+  document.getElementById('mode-icon').textContent = MODES.find(m=>m.id===id).icon;
+  document.querySelectorAll('.mode-btn').forEach((btn,i) => {
+    btn.classList.toggle('active', MODES[i].id===id);
+  });
+}
+
+function buildStarters() {
+  const el = document.getElementById('starters');
+  el.innerHTML = '';
+  starters.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'starter';
+    btn.innerHTML = `<span class="starter-icon">${s.icon}</span><span>${escHtml(s.text)}</span>`;
+    btn.onclick = () => sendMessage(s.text);
+    el.appendChild(btn);
+  });
+}
+
+function buildSettingsSheet() {
+  document.getElementById('set-body').innerHTML = `
+    <div class="set-section">
+      <div class="set-lbl">GROQ API KEY</div>
+      <div class="set-val">${API_KEY.slice(0,16)}••••••••</div>
+    </div>
+    <div class="set-section">
+      <div class="set-lbl">MODEL</div>
+      <div class="set-val">llama-3.3-70b-versatile</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">CHANGE API KEY</button>`;
+}
+
+function logout() {
+  localStorage.removeItem('apex_groq_key');
+  API_KEY = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('api-screen').style.display = 'flex';
+  document.getElementById('api-input').value = '';
+  closeAllSheets();
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────────────
+function openSheet(name) {
+  closeAllSheets();
+  if (name==='memory') renderMemory();
+  if (name==='evolution') renderEvolution();
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById(`sheet-${name}`).classList.add('show');
+}
+
+function closeAllSheets() {
+  document.getElementById('overlay').classList.remove('show');
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+}
+
+function renderMemory() {
+  const el = document.getElementById('mem-body');
+  const m = memory;
+  const has = m.name||m.expertise||m.goals?.length||m.topics?.length||m.projects?.length;
+  if (!has) { el.innerHTML = `<div class="empty"><div class="empty-icon">◎</div><div class="empty-txt">APEX learns as you chat.<br>Context appears here.</div></div>`; return; }
+  let html = '';
+  const chip = (color,item) => `<span class="mem-chip" style="background:${color}12;border:1px solid ${color}28;color:${color}cc">${escHtml(item)}</span>`;
+  if (m.name) html += section('IDENTITY',[chip('#f59e0b',m.name)]);
+  if (m.expertise) html += section('EXPERTISE',[chip('#a78bfa',m.expertise.toUpperCase())]);
+  if (m.goals?.length) html += section('GOALS',m.goals.map(g=>chip('#00f5d4',g)));
+  if (m.topics?.length) html += section('TOPICS',m.topics.map(t=>chip('#34d399',t)));
+  if (m.projects?.length) html += section('PROJECTS',m.projects.map(p=>chip('#f59e0b',p)));
+  el.innerHTML = html;
+  function section(title,chips) { return `<div class="mem-section"><div class="mem-title">${title}</div><div class="mem-chips">${chips.join('')}</div></div>`; }
+}
+
+function renderEvolution() {
+  const el = document.getElementById('evo-body');
+  if (!evoHistory.length) { el.innerHTML = `<div class="empty"><div class="empty-icon">◎</div><div class="empty-txt">No upgrades yet.<br>Evolves every 3 messages.</div></div>`; return; }
+  el.innerHTML = [...evoHistory].reverse().map(u => `
+    <div class="evo-card">
+      <div class="evo-gen">GEN ${u.generation} · ${u.timestamp}</div>
+      ${(u.changelog||[]).map(c=>`<div class="evo-change"><span class="evo-arrow">↑</span>${escHtml(c)}</div>`).join('')}
+    </div>`).join('');
+}
+
+// ── THINKING ANIMATION ────────────────────────────────────────────────────────
+let thinkInterval = null;
+function showThinking(stepIdx) {
+  const el = document.getElementById('thinking');
+  el.style.display = 'block';
+  const stepsEl = document.getElementById('think-steps');
+  stepsEl.innerHTML = STEPS.map((s,i) => `
+    <div class="think-row ${i===stepIdx?'active':i<stepIdx?'done':''}" id="trow-${i}">
+      <span class="think-icon ${i===stepIdx?'spin':''}" id="ticon-${i}">${i<stepIdx?'✓':s.icon}</span>
+      <span class="think-txt ${i===stepIdx?'active':''}">${s.label}${i===stepIdx?'<span class="think-cursor">_</span>':''}</span>
+    </div>`).join('');
+  scrollBottom();
+}
+
+function hideThinking() {
+  document.getElementById('thinking').style.display = 'none';
+}
+
+// ── SEND MESSAGE ──────────────────────────────────────────────────────────────
+async function sendMessage(text) {
+  const inputEl = document.getElementById('msg-input');
+  const txt = text || inputEl.value.trim();
+  if (!txt || loading) return;
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  document.getElementById('send-btn').disabled = true;
+  document.getElementById('welcome').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('clr-btn').style.display = 'flex';
+  document.getElementById('evo-bar').style.display = 'flex';
+  loading = true;
+
+  const userMsg = {role:'user', content:txt};
+  messages.push(userMsg);
+  appendMessage(userMsg);
+
+  try {
+    // Agent steps
+    for (let i = 0; i < 4; i++) {
+      showThinking(i);
+      await sleep(420);
+    }
+
+    const sys = baseSystem + modeAugments[currentMode];
+    const apiMsgs = messages.map(m => ({role:m.role, content:m.content}));
+    const draft = await callGroq(apiMsgs, sys, 1500);
+
+    showThinking(4);
+    await sleep(300);
+
+    let final = draft, score = 9, issues = [];
+    try {
+      const CRIT = `You are APEX's Quality Auditor. Review the draft. Return ONLY valid JSON: {"score":<1-10>,"issues":["issue"],"improved":"<full improved response>"} If score>=9 return original. If <9 rewrite to score 10.`;
+      const cr = await callGroq([{role:'user',content:`Q:"${txt.slice(0,200)}"\n\nDRAFT:\n${draft}`}], CRIT, 1200);
+      const c = extractJSON(cr);
+      score = c.score||9; issues = c.issues||[];
+      if (c.improved && score < 9) final = c.improved;
+    } catch(e) {}
+
+    hideThinking();
+
+    const aMsg = {role:'assistant', content:final, mode:currentMode, score, issues};
+    messages.push(aMsg);
+    appendMessage(aMsg);
+
+    // Update stats
+    scores.push(score);
+    const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10;
+    const avgBox = document.getElementById('avg-box');
+    avgBox.style.display = 'block';
+    document.getElementById('avg-num').textContent = avg;
+
+    // Background tasks
+    doMemory(txt, final);
+    sinceUpgrade++;
+    updateEvoBar();
+    if (sinceUpgrade >= 3 && !upgrading) {
+      sinceUpgrade = 0;
+      updateEvoBar();
+      setTimeout(doUpgrade, 700);
+    }
+
+  } catch(e) {
+    hideThinking();
+    messages.pop(); // remove user msg if failed
+    const errEl = document.getElementById('error-box');
+    errEl.textContent = `⚠ ${e.message||'Request failed. Check your API key and internet connection.'}`;
+    errEl.style.display = 'block';
+  }
+
+  loading = false;
+  document.getElementById('send-btn').disabled = !inputEl.value.trim();
+  scrollBottom();
+}
+
+function appendMessage(msg) {
+  const isUser = msg.role === 'user';
+  const el = document.createElement('div');
+  el.className = 'msg' + (isUser?' user':'');
+
+  const scoreColor = msg.score>=9?'#00f5d4':msg.score>=7?'#f59e0b':'#f87171';
+  const escapedContent = msg.content.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+
+  el.innerHTML = `
+    <div class="avatar ${isUser?'user':'ai'}">${isUser?'U':'◆'}</div>
+    <div class="msg-body">
+      ${!isUser&&msg.mode?`<div class="msg-mode">APEX · ${msg.mode}</div>`:''}
+      <div class="bubble ${isUser?'user':'ai'}">
+        ${isUser
+          ? `<div class="user-text">${escHtml(msg.content)}</div>`
+          : `<div>${renderMarkdown(msg.content)}</div>`
+        }
+      </div>
+      ${!isUser?`
+        <div class="msg-footer">
+          <button class="copy-btn" onclick="copyMsg(this,\`${escapedContent}\`)">⎘ COPY</button>
+          ${msg.score!==undefined?`
+            <div class="quality">
+              <span class="q-lbl">Q</span>
+              <div class="q-bar"><div class="q-fill" style="width:${msg.score*10}%;background:${scoreColor}"></div></div>
+              <span class="q-num" style="color:${scoreColor}">${msg.score}/10</span>
+            </div>`:''}
+        </div>`:''}
+    </div>`;
+
+  document.getElementById('messages').appendChild(el);
+  scrollBottom();
+}
+
+function copyMsg(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ COPIED'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ COPY'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// ── CLEAR ─────────────────────────────────────────────────────────────────────
+function clearChat() {
+  messages = []; scores = []; sinceUpgrade = 0;
+  memory = {goals:[],topics:[],projects:[],preferences:[]};
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('welcome').style.display = 'block';
+  document.getElementById('clr-btn').style.display = 'none';
+  document.getElementById('evo-bar').style.display = 'none';
+  document.getElementById('avg-box').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  updateEvoBar();
+}
+
+// ── EVO BAR ───────────────────────────────────────────────────────────────────
+function updateEvoBar() {
+  document.getElementById('evo-fill').style.width = `${(sinceUpgrade/3)*100}%`;
+  document.getElementById('evo-count').textContent = `${sinceUpgrade}/3`;
+}
+
+// ── SELF UPGRADE ──────────────────────────────────────────────────────────────
+async function doUpgrade() {
+  if (messages.length < 3) return;
+  upgrading = true;
+  document.getElementById('evo-dot').style.display = 'block';
+  try {
+    const recent = messages.slice(-6).map(m=>`[${m.role.toUpperCase()}]: ${m.content.slice(0,200)}`).join('\n\n');
+    const prompt = `CURRENT SYSTEM:\n${baseSystem.slice(0,600)}\n\nRECENT:\n${recent}\n\nPROFILE:\n${JSON.stringify(memory)}\n\nGeneration: ${generation+1}`;
+    const UPGRADE_SYS = `You are APEX's Self-Evolution Engine. Rewrite APEX's system prompt to be more effective for this user. Keep core structure. Add user-specific context. Keep under 2000 chars. Return ONLY valid JSON: {"generation":<n>,"base_system":"<upgraded>","mode_augments":{"<ID>":"<augment>"},"changelog":["change1","change2"],"new_starters":[{"icon":"<emoji>","text":"<starter>"}]}`;
+    const raw = await callGroq([{role:'user',content:prompt}], UPGRADE_SYS, 1500);
+    const u = extractJSON(raw);
+    generation++;
+    const ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const rec = {...u, generation, timestamp:ts};
+    if (u.base_system) baseSystem = u.base_system;
+    if (u.mode_augments) modeAugments = {...modeAugments,...u.mode_augments};
+    if (u.new_starters?.length) { starters = [...u.new_starters,...starters].slice(0,6); buildStarters(); }
+    evoHistory.push(rec);
+
+    // Update UI
+    const badge = document.getElementById('gen-badge');
+    badge.style.display = 'inline-block';
+    badge.textContent = `G${generation}`;
+    const navLbl = document.getElementById('nav-evo-lbl');
+    navLbl.textContent = `Evo G${generation}`;
+
+    // Update nav badge
+    const navEvo = document.getElementById('nav-evo');
+    let nb = navEvo.querySelector('.nav-badge');
+    if (!nb) { nb = document.createElement('span'); nb.className = 'nav-badge'; navEvo.appendChild(nb); }
+    nb.textContent = evoHistory.length;
+    navEvo.classList.add('active');
+
+    // Show toast
+    showToast(rec);
+  } catch(e) { console.warn('Upgrade failed:', e.message); }
+  upgrading = false;
+  document.getElementById('evo-dot').style.display = 'none';
+}
+
+function showToast(u) {
+  document.getElementById('toast-title').textContent = `◆ APEX EVOLVED · GEN ${u.generation}`;
+  document.getElementById('toast-body').innerHTML = (u.changelog||[]).slice(0,2)
+    .map(c=>`<div class="toast-change"><span class="evo-arrow">↑</span>${escHtml(c)}</div>`).join('');
+  const t = document.getElementById('toast');
+  t.style.display = 'block';
+  setTimeout(closeToast, 5000);
+}
+
+function closeToast() { document.getElementById('toast').style.display = 'none'; }
+
+// ── MEMORY ────────────────────────────────────────────────────────────────────
+async function doMemory(uMsg, aMsg) {
+  try {
+    const MEM_SYS = `Extract facts. Return ONLY valid JSON: {"name":<string|null>,"expertise":<"beginner"|"intermediate"|"expert"|null>,"goals":[],"topics":[],"preferences":[],"projects":[]}`;
+    const raw = await callGroq([{role:'user',content:`USER:"${uMsg.slice(0,200)}"\nAPEX:"${aMsg.slice(0,200)}"`}], MEM_SYS, 300);
+    const p = extractJSON(raw);
+    if(p.name) memory.name=p.name;
+    if(p.expertise) memory.expertise=p.expertise;
+    memory.goals=[...new Set([...memory.goals,...(p.goals||[])])].slice(0,5);
+    memory.topics=[...new Set([...memory.topics,...(p.topics||[])])].slice(0,7);
+    memory.projects=[...new Set([...memory.projects,...(p.projects||[])])].slice(0,4);
+    memory.preferences=[...new Set([...memory.preferences,...(p.preferences||[])])].slice(0,4);
+
+    const memCount = memory.goals.length + memory.topics.length;
+    const navMem = document.getElementById('nav-mem');
+    if (memCount > 0) {
+      let nb = navMem.querySelector('.nav-badge');
+      if (!nb) { nb = document.createElement('span'); nb.className = 'nav-badge'; navMem.appendChild(nb); }
+      nb.textContent = memCount;
+      navMem.classList.add('active');
+    }
+  } catch(e) {}
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function scrollBottom() {
+  setTimeout(() => {
+    document.getElementById('chat-bottom').scrollIntoView({behavior:'smooth'});
+  }, 50);
+}
+</script>
+</body>
+</html>
