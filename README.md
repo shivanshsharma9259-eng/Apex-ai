@@ -33,3 +33,4 @@ An intelligent AI-powered chat web application built with React and powered by G
 ```bash
 git clone https://github.com/shivanshsharma9259-eng/apex-ai.git
 cd apex-ai
+This made with me by using claude 
