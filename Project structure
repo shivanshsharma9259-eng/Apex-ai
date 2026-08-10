@@ -1,0 +1,9 @@
+Apex-ai/
+├── src/
+│   ├── components/     # React components
+│   ├── App.js         # Main app
+│   └── styles/        # CSS files
+├── public/            # Static files
+├── package.json       # Dependencies
+├── .env               # Environment variables (not in GitHub)
+└── README.md          # This file
